@@ -1,3 +1,4 @@
+// sanity/lib/queries.ts
 export const queries = {
   allProducts: `*[_type == "product"]{
     _id,
@@ -9,10 +10,12 @@ export const queries = {
     colors,
     sizes,
     category,
-    "imageUrl": imageUrl
+    "imageUrl": imageUrl,
+    rating
   }`,
 
   singleProductById: `*[_type == "product" && _id == $id][0]`,
-
-  singleProductBySlug: `*[_type == "product" && slug.current == $slug][0]`,
+  
+  // You can remove or ignore the slug query if you're not using it:
+  // singleProductBySlug: `*[_type == "product" && slug.current == $slug][0]`,
 };

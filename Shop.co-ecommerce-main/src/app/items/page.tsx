@@ -7,7 +7,8 @@ import { useWishlist } from '../context/WishlistContext';
 
 // Optionally define an interface if you want type safety.
 interface Product {
-  id: number;
+  id?: number | string;       // Allow string too if using _id from Sanity.
+  _id?: number | string;
   name: string;
   imageUrl: string;
   price: number;
@@ -34,7 +35,7 @@ export default function Items() {
 
   // Optional sorting logic based on `sortBy` selection
   const sortedProducts = useMemo(() => {
-    let sorted = [...products];
+    const sorted = [...products];
     if (sortBy === 'Price: Low to High') {
       sorted.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'Price: High to Low') {
@@ -45,12 +46,17 @@ export default function Items() {
 
   // Handler for adding product to wishlist
   const handleAddToWishlist = (product: Product) => {
-    addToWishlist({
-      id: product.id.toString(),
-      title: product.name,
-      price: product.price,
-      image: product.imageUrl,
-    });
+    const productKey = product.id || product._id;
+    if (productKey) {
+      addToWishlist({
+        id: productKey.toString(),
+        title: product.name,
+        price: product.price,
+        image: product.imageUrl,
+      });
+    } else {
+      console.error('Product key is undefined for product:', product);
+    }
   };
 
   return (
@@ -80,8 +86,11 @@ export default function Items() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-5">
           {sortedProducts.map((product) => (
-            <div key={product.id} className="shadow rounded-md p-4">
-              <Link href={`/product/${product.id}`}>
+            <div
+              key={product.id || product._id}  // Use id or _id as a fallback
+              className="shadow rounded-md p-4"
+            >
+              <Link href={`/products/${product.id || product._id}`}>
                 <Image
                   src={product.imageUrl}
                   alt={product.name}
@@ -93,8 +102,9 @@ export default function Items() {
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <LiaStarSolid
-                      key={index}
+                      key={`star-${product.id || product._id}-${index}`}
                       color={index < product.rating ? 'orange' : 'gray'}
+                      size="20px"
                     />
                   ))}
                   <span className="text-sm">{product.rating}/5</span>
@@ -123,22 +133,53 @@ export default function Items() {
 
 
 
-
-
 // "use client";
-// // app/items/page.tsx
-// import React, { useState } from 'react';
+// import React, { useState, useEffect, useMemo } from 'react';
 // import Image from 'next/image';
 // import { LiaStarSolid } from 'react-icons/lia';
 // import Link from 'next/link';
 // import { useWishlist } from '../context/WishlistContext';
-// import { allProducts } from '../lib/products'; // Import products
+
+// // Optionally define an interface if you want type safety.
+// interface Product {
+//   id: number;
+//   name: string;
+//   imageUrl: string;
+//   price: number;
+//   rating: number;
+//   description?: string;
+// }
 
 // export default function Items() {
 //   const [sortBy, setSortBy] = useState('Most Popular');
 //   const { addToWishlist } = useWishlist();
 
-//   const handleAddToWishlist = (product: typeof allProducts[number]) => {
+//   // State for storing fetched products
+//   const [products, setProducts] = useState<Product[]>([]);
+
+//   // Fetch all products from our dynamic route /api/products
+//   useEffect(() => {
+//     fetch('/api/products')
+//       .then((res) => res.json())
+//       .then((data) => {
+//         setProducts(data);
+//       })
+//       .catch((error) => console.error('Error fetching products:', error));
+//   }, []);
+
+//   // Optional sorting logic based on `sortBy` selection
+//   const sortedProducts = useMemo(() => {
+//     const sorted = [...products];
+//     if (sortBy === 'Price: Low to High') {
+//       sorted.sort((a, b) => a.price - b.price);
+//     } else if (sortBy === 'Price: High to Low') {
+//       sorted.sort((a, b) => b.price - a.price);
+//     }
+//     return sorted;
+//   }, [products, sortBy]);
+
+//   // Handler for adding product to wishlist
+//   const handleAddToWishlist = (product: Product) => {
 //     addToWishlist({
 //       id: product.id.toString(),
 //       title: product.name,
@@ -173,9 +214,9 @@ export default function Items() {
 //         </header>
 
 //         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-5">
-//           {allProducts.map((product) => (
+//           {sortedProducts.map((product) => (
 //             <div key={product.id} className="shadow rounded-md p-4">
-//               <Link href={`/product/${product.id}`}>
+//               <Link href={`/products/${product.id}`}>
 //                 <Image
 //                   src={product.imageUrl}
 //                   alt={product.name}
@@ -214,3 +255,7 @@ export default function Items() {
 //     </div>
 //   );
 // }
+
+
+
+
